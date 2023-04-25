@@ -3,20 +3,54 @@ from telegram.ext import Updater, MessageHandler, Filters
 from langdetect import detect
 import requests
 from bs4 import BeautifulSoup
+import json
+import requests
 
 
 TOKEN = '6289732281:AAGjFFF6mPQBMQDYPt-kMXA-YZc8jcEY42k'
 
 class EdamamAPI:
-    def __init__(self, token):
-        self.token = token
+    def __init__(self, app_id, app_key):
+        self.url = "https://api.edamam.com/search"
+        self.app_id = app_id
+        self.app_key = app_key
 
-    def 
+    def search_recipes(self, query, vegetarian=False, gluten_free=False, dairy_free=False):
+        params = {
+            "q": query,
+            "app_id": self.app_id,
+            "app_key": self.app_key,
+            "from": 0,
+            "to": 10
+        }
+
+        if vegetarian:
+            params["health"] = "vegetarian"
+
+        if gluten_free:
+            params["health"] = "gluten-free"
+
+        if dairy_free:
+            params["health"] = "dairy-free"
+
+        response = requests.get(self.url, params=params)
+        data = json.loads(response.text)
+
+        if "hits" not in data:
+            return []
+
+        recipes = []
+        for hit in data["hits"]:
+            recipe = hit["recipe"]
+            recipes.append(recipe)
+
+        return recipes
 
 
 def start(update, context):
     """Обработчик команды /start."""
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Введите список продуктов через запятую, и я найду для вас рецепты блюд.")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Привет! Введите список продуктов через запятую, и я найду для вас рецепты блюд. Также можете указать через запятную особенности блюда: вегетарианское, без молока, без глютена")
 
 
 def find_recipes(update, context):
@@ -39,7 +73,9 @@ def find_recipes(update, context):
     if lang == 'ru':
         api = EdimDomaAPI(url)
     else:
-        api = EdamamAPI(url)
+        app_id = "0444e0ee"
+        app_key = "d27b186ea5810d2379393198a8096486"
+        api = EdamamAPI(app_id, app_key)
 
     # Получаем список рецептов по запросу
     recipes = api.search_recipes(query, vegetarian, gluten_free, dairy_free)
@@ -58,9 +94,10 @@ def find_recipes(update, context):
                 ingredients = '\n'.join(ingredients)
                 context.bot.send_message(chat_id=update.effective_chat.id, text=f'<b>{title}</b>\n{ingredients}\n<a href="{url}">Ссылка на рецепт</a>', parse_mode=telegram.ParseMode.HTML)
             else:
-                title = recipe.find('h3', class_='fixed-recipe-card__h3').text.strip()
-                url = recipe.find('a', class_='fixed-recipe-card__title-link')['href']
-                ingredients = recipe.find('div', class_='fixed-recipe-card__ingredients').text.strip()
+                title = recipe["label"]
+                url = recipe["url"]
+                ingredients = recipe["ingredientLines"]
+                ingredients = '\n'.join(ingredients)
                 context.bot.send_message(chat_id=update.effective_chat.id, text=f'<b>{title}</b>\n{ingredients}\n<a href="{url}">Ссылка на рецепт</a>', parse_mode=telegram.ParseMode.HTML)
 
 
