@@ -4,7 +4,7 @@ from langdetect import detect
 import requests
 import json
 
-TOKEN = '6289732281:AAGjFFF6mPQBMQDYPt-kMXA-YZc8jcEY42k'
+TOKEN = ''
 
 class EdamamAPI:
     def __init__(self, app_id, app_key):
@@ -66,8 +66,8 @@ def find_recipes(update, context):
     if "без молока" in query:
         dairy_free = True
 
-    app_id = "0444e0ee"
-    app_key = "d27b186ea5810d2379393198a8096486"
+    app_id = ""
+    app_key = ""
     api = EdamamAPI(app_id, app_key)
 
     # Get recipe list based on the query
