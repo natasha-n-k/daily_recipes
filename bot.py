@@ -2,10 +2,7 @@ import telegram
 from telegram.ext import Updater, MessageHandler, Filters
 from langdetect import detect
 import requests
-from bs4 import BeautifulSoup
 import json
-import requests
-
 
 TOKEN = '6289732281:AAGjFFF6mPQBMQDYPt-kMXA-YZc8jcEY42k'
 
@@ -45,7 +42,7 @@ class EdamamAPI:
             recipes.append(recipe)
 
         return recipes
-
+    
 
 def start(update, context):
     """Обработчик команды /start."""
@@ -70,12 +67,9 @@ def find_recipes(update, context):
         dairy_free = True
 
     # Выбираем API-сервис на основе языка
-    if lang == 'ru':
-        api = EdimDomaAPI(url)
-    else:
-        app_id = "0444e0ee"
-        app_key = "d27b186ea5810d2379393198a8096486"
-        api = EdamamAPI(app_id, app_key)
+    app_id = "0444e0ee"
+    app_key = "d27b186ea5810d2379393198a8096486"
+    api = EdamamAPI(app_id, app_key)
 
     # Получаем список рецептов по запросу
     recipes = api.search_recipes(query, vegetarian, gluten_free, dairy_free)
@@ -86,19 +80,11 @@ def find_recipes(update, context):
     else:
         # Отправляем найденные рецепты пользователю
         for recipe in recipes:
-            if lang == 'ru':
-                title = recipe.find('a', class_='b-recipe-preview__link').text
-                url = 'https://www.edimdoma.ru' + recipe.find('a', class_='b-recipe-preview__link')['href']
-                ingredients = recipe.find_all('li', class_='b-recipe-preview__ingredient')
-                ingredients = [ingredient.text.strip() for ingredient in ingredients]
-                ingredients = '\n'.join(ingredients)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=f'<b>{title}</b>\n{ingredients}\n<a href="{url}">Ссылка на рецепт</a>', parse_mode=telegram.ParseMode.HTML)
-            else:
-                title = recipe["label"]
-                url = recipe["url"]
-                ingredients = recipe["ingredientLines"]
-                ingredients = '\n'.join(ingredients)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=f'<b>{title}</b>\n{ingredients}\n<a href="{url}">Ссылка на рецепт</a>', parse_mode=telegram.ParseMode.HTML)
+            title = recipe["label"]
+            url = recipe["url"]
+            ingredients = recipe["ingredientLines"]
+            ingredients = '\n'.join(ingredients)
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f'<b>{title}</b>\n{ingredients}\n<a href="{url}">Ссылка на рецепт</a>', parse_mode=telegram.ParseMode.HTML)
 
 
 def main():
